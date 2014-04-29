@@ -3,7 +3,7 @@ import Keys._
 
 object build extends Build {
   lazy val sharedSettings = Defaults.defaultSettings ++ Seq(
-    scalaVersion := "2.11.0-RC3",
+    scalaVersion := "2.11.0",
     crossVersion := CrossVersion.full,
     version := "0.1.0-SNAPSHOT",
     organization := "org.scalareflect",
@@ -126,7 +126,7 @@ object build extends Build {
   ) settings (
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
     libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _),
-    libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.2" % "test",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
     scalacOptions ++= Seq()
   )
@@ -137,7 +137,9 @@ object build extends Build {
   ) settings (
     sharedSettings ++ usePluginSettings: _*
   ) settings (
-    scalacOptions ++= Seq()
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
+    libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-compiler" % _),
+     scalacOptions ++= Seq()
   )
 
   lazy val tests = Project(
@@ -146,7 +148,7 @@ object build extends Build {
   ) settings (
     sharedSettings ++ usePluginSettings: _*
   ) settings (
-    libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.2" % "test",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.3" % "test",
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
     scalacOptions ++= Seq()
   )

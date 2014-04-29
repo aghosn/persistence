@@ -5,6 +5,14 @@ import scala.reflect.internal.util.Position
 
 object NodeTag extends Enumeration {
   val PackageDef, ClassDef, ModuleDef, ValDef, DefDef, TypeDef, LabelDef, Import, Template, Block, CaseDef, Alternative, Star, Bind, UnApply, ArrayValue, Function, Assign, AssignOrNamedArg, If, Match, Return, Try, Throw, New, Typed, TypeApply, Apply, ApplyDynamic, This, Select, Ident, ReferenceToBoxed, Literal, Annotated, SingletonTypeTree, SelectFromTypeTree, CompoundTypeTree, AppliedTypeTree, TypeBoundsTree, ExistentialTypeTree, TypeTree, Super, EmptyTree, Separator = Value
+
+  def getIndex(s: NodeTag.Value): Int = {
+    NodeTag.values.toList.sortBy(_.toString).indexOf(s)
+  }
+
+  def getVal(i: Int): NodeTag.Value = {
+    (NodeTag.values.toList.sortBy(_.toString).toList)(i)
+  }
 }
 
 case class NodeBFS(node: Node, bfsIdx: Int, parentBfsIdx: Int) {

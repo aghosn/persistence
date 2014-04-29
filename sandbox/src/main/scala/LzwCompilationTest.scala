@@ -6,6 +6,7 @@ import java.io.FileInputStream
 import java.nio.ByteBuffer
 import java.io.DataInputStream
 import java.io.DataOutputStream
+import scala.language.postfixOps
 
 object Lzw {
 

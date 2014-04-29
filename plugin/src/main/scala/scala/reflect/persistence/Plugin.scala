@@ -6,6 +6,7 @@ import scala.language.postfixOps
 import scala.annotation.tailrec
 import java.io.DataOutputStream
 import java.io.FileOutputStream
+import java.io.File
 
 class Plugin(val global: Global) extends NscPlugin {
   import global._
@@ -24,27 +25,14 @@ class Plugin(val global: Global) extends NscPlugin {
     val phaseName = "persist"
     def newPhase(prev: Phase) = new StdPhase(prev) {
       def apply(unit: CompilationUnit) {
-        /* TODO: remove those (there for test dependent of global) */
-        val decomposedTree = new TreeDecomposer()(unit body)
-        val recomposedTree = new TreeRecomposer()(decomposedTree)
-        val astCompressor = new AstCompressor(null)
-        println("Original:")
-        println(showRaw(unit body))
-        println("Frequences dict:")
-        decomposedTree.tree.computeFreqs.testingDict foreach (println(_))
-        val splitTree = astCompressor.splitTree(decomposedTree.tree)
-        println("Dict:")
-        splitTree._1.testingDict foreach (println(_))
-        println("Edges:")
-        println(splitTree._3)
-        println("Huffman Codes:")
-        val hufCodes = astCompressor.genHuffman(splitTree._1)
-        hufCodes.values foreach (c => println(c.map(v => v.toInt)))
-        println("Bit string for the compressed tree:")
-        astCompressor.encodeOccurrences(splitTree._2, hufCodes) foreach (print(_))
-        println()
+        val decomposedTree = TreeDecomposer(unit body)
+        
+        val folder = new File("asts")
+        if(!folder.exists()) folder.mkdir()
 
-        /* TODO: implement this */
+        /* TODO: do hierarchy as package */
+        val astCompressor = new AstCompressor(new DataOutputStream(new FileOutputStream(s"asts/${unit.source.toString}.ast")))
+        astCompressor(decomposedTree.tree)
       }
     }
 
@@ -52,7 +40,8 @@ class Plugin(val global: Global) extends NscPlugin {
     case class DecomposedTree(tree: Node, namesBFS: Map[Name, List[Int]], symbBFS: Map[Symbol, List[Int]], typesBFS: Map[Type, List[Int]], constBFS: Map[Constant, List[Int]])
 
     /* Return a simplified tree along with maps of Names / Symbols / Types zipped with occurrences in BFS order */
-    class TreeDecomposer extends (Tree => DecomposedTree) {
+    /* TODO: adapt, depending if we need to store names */
+    object TreeDecomposer extends (Tree => DecomposedTree) {
       def apply(tree: Tree): DecomposedTree = {
         var nameList: RevList[Name] = List()
         var symbolList: RevList[Symbol] = List()
@@ -175,11 +164,12 @@ class Plugin(val global: Global) extends NscPlugin {
         DecomposedTree(newTree, nameList.zipWithIdxs, symbolList.zipWithIdxs, typeList.zipWithIdxs, constList.zipWithIdxs)
       }
     }
-
     class SymbolDecomposer { /* TODO */ }
 
+    /* TODO: buggy version, bugs to fix */
+    /* TODO: use or discard, depending if we need to store names */
     class NameCompressor(comp: LzwCompressor) extends (Map[Name, List[Int]] => Unit) {
-      /* TODO: can we have null names ? If yes, this would crash */
+      /* TODO: can we have null names? If yes, this would crash */
       def apply(namesBFS: Map[Name, List[Int]]) { /* TODO: This is just a tentative encoding as string */
         var flags: List[Int] = List()
         val nms = namesBFS.:\("") {
@@ -202,17 +192,9 @@ class Plugin(val global: Global) extends NscPlugin {
       }
     }
 
-    class SymbolCompressor(comp: LzwCompressor) extends (Map[Symbol, List[Int]] => Unit) {
-      /* TODO: find what to store here. Use pickling ? */
-      /* TODO: use the LzwCompressor to compress it using the same dict as before */
-      /* TODO: encode properly the symbols, e.g. as string */
-      /* TODO: the names here are the same as in the AST, no need to store them twice */
-      /* TODO: the types here are the same as in the AST, no need to store them twice */
-      def apply(symbBFS: Map[Symbol, List[Int]]) = { ??? }
-    }
-
-    class ConstantCompressor { /* TODO */ }
-    class TypeCompressor { /* TODO */ }
+    class SymbolCompressor(comp: LzwCompressor) { /* TODO */ }
+    object ConstantCompressor { /* TODO */ }
+    object TypeCompressor { /* TODO */ }
 
     /* Generate a list of trees in BFS order */
     implicit class TreeToBFS(tree: Tree) {
@@ -226,8 +208,9 @@ class Plugin(val global: Global) extends NscPlugin {
       }
     }
 
-    /* Note that for test purposes, we put this class in the plugin. */
-    class TreeRecomposer extends (DecomposedTree => Tree) {
+    /* TODO: transpose to another class in the decompression library. */
+    /* TODO: test and adapt */
+    object TreeRecomposer extends (DecomposedTree => Tree) {
       def apply(decomp: DecomposedTree): Tree = {
         var nameList: RevList[Name] = decomp.namesBFS.unzipWithIdxs
         var symbolList: RevList[Symbol] = decomp.symbBFS.unzipWithIdxs

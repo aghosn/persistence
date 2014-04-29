@@ -1,3 +1,5 @@
+package scala.reflect.persistence.test
+
 import scala.reflect.persistence._
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 import scala.util.parsing.input._
